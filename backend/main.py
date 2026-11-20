@@ -19,7 +19,7 @@ from benchmark_data import BENCHMARK_SNIPPETS
 app = FastAPI(
     title="VibeGuard Security API",
     description="Zero-Latency Security Gate & Auto-Patcher for AI-Generated Code",
-    version="1.1.0"
+    version="1.2.0"
 )
 
 app.add_middleware(
@@ -98,31 +98,73 @@ def get_presets():
     return [
         {
             "id": "lovable-leak",
-            "name": "Lovable: Leaked Supabase Service Role Key",
+            "name": "1. Leaked Supabase Secret (CWE-798)",
+            "cwe": "CWE-798",
+            "cvss": 9.8,
+            "badge_color": "text-red-400 border-red-500/20",
             "language": "python",
             "code": BENCHMARK_SNIPPETS[0]["code"].strip(),
             "description": "AI generated a client connection exposing the admin service_role secret directly in source code."
         },
         {
             "id": "sqli-idor",
-            "name": "Cursor: SQL Injection + Missing Auth Check",
+            "name": "2. SQL Injection in Search (CWE-89)",
+            "cwe": "CWE-89",
+            "cvss": 8.8,
+            "badge_color": "text-amber-400 border-amber-500/20",
             "language": "python",
             "code": BENCHMARK_SNIPPETS[2]["code"].strip(),
-            "description": "AI created a profile search endpoint with unescaped SQL string formatting."
+            "description": "AI created a profile search query using unescaped string formatting in raw SQL."
         },
         {
-            "id": "openai-key",
-            "name": "v0: Hardcoded OpenAI Private Token",
+            "id": "cmd-injection",
+            "name": "3. Command Injection RCE (CWE-78)",
+            "cwe": "CWE-78",
+            "cvss": 9.8,
+            "badge_color": "text-rose-400 border-rose-500/20",
             "language": "python",
-            "code": BENCHMARK_SNIPPETS[3]["code"].strip(),
-            "description": "AI hardcoded an active OpenAI private API key directly in the completion handler."
+            "code": BENCHMARK_SNIPPETS[6]["code"].strip(),
+            "description": "AI invoked operating system shell via os.system with unsanitized filename input."
+        },
+        {
+            "id": "auth-idor",
+            "name": "4. Missing Auth on Delete (CWE-285)",
+            "cwe": "CWE-285",
+            "cvss": 7.5,
+            "badge_color": "text-orange-400 border-orange-500/20",
+            "language": "python",
+            "code": BENCHMARK_SNIPPETS[1]["code"].strip(),
+            "description": "AI created a profile deletion route with zero session identity verification."
+        },
+        {
+            "id": "eval-rce",
+            "name": "5. Arbitrary Eval Execution (CWE-95)",
+            "cwe": "CWE-95",
+            "cvss": 9.8,
+            "badge_color": "text-pink-400 border-pink-500/20",
+            "language": "python",
+            "code": BENCHMARK_SNIPPETS[9]["code"].strip(),
+            "description": "AI used eval() to evaluate mathematical expressions with raw user input."
+        },
+        {
+            "id": "xss-react",
+            "name": "6. React XSS innerHTML (CWE-79)",
+            "cwe": "CWE-79",
+            "cvss": 8.2,
+            "badge_color": "text-yellow-400 border-yellow-500/20",
+            "language": "javascript",
+            "code": BENCHMARK_SNIPPETS[10]["code"].strip(),
+            "description": "AI directly passed unsanitized user comment string into React innerHTML."
         },
         {
             "id": "clean-example",
-            "name": "Clean: Secure Parameterized Endpoint",
+            "name": "7. Clean Parameterized Reference (Control)",
+            "cwe": "CLEAN",
+            "cvss": 0.0,
+            "badge_color": "text-emerald-400 border-emerald-500/20",
             "language": "python",
             "code": BENCHMARK_SNIPPETS[18]["code"].strip(),
-            "description": "Secure reference implementation using parameterized queries and zero hardcoded secrets."
+            "description": "Secure reference implementation using parameterized bind variables and zero hardcoded keys."
         }
     ]
 
