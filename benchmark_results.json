@@ -1,0 +1,590 @@
+{
+  "total_evaluated": 35,
+  "vulnerable_count": 18,
+  "benign_count": 17,
+  "true_positives": 16,
+  "true_negatives": 16,
+  "false_positives": 1,
+  "false_negatives": 2,
+  "metrics": {
+    "accuracy_percent": 91.4,
+    "precision_percent": 94.1,
+    "recall_percent": 88.9,
+    "f1_score": 0.914,
+    "avg_latency_ms": 2.49,
+    "baseline_vulnerability_rate_pct": 51.4,
+    "remediated_vulnerability_rate_pct": 5.7,
+    "vulnerability_reduction_pct": 88.9
+  },
+  "results": [
+    {
+      "id": "SNIP-VULN-01",
+      "title": "Lovable Supabase Client with Leaked Service Key",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 1.69,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-SEC-SUPABASE_KEY",
+          "cwe": "CWE-798",
+          "title": "Hardcoded Secret / API Key (SUPABASE_KEY)",
+          "line": 5,
+          "severity": "CRITICAL",
+          "snippet": "SUPABASE_KEY = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwic3ViIjoiMTIzNDU2In0.secret_signature_987654321\"",
+          "entropy": 5.23,
+          "description": "Exposed high-entropy secret detected on line 5. Leaking secrets enables unauthorized account hijacking.",
+          "fix_suggestion": "Extract the secret into an environment variable (e.g. process.env or os.environ)."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-02",
+      "title": "Unauthenticated User Profile Deletion (Lovable IDOR)",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 0.91,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-AUTH-IDOR",
+          "cwe": "CWE-285",
+          "title": "Missing Access Control on Mutating Endpoint (IDOR)",
+          "line": 7,
+          "severity": "HIGH",
+          "description": "Endpoint 'delete_user_account' performs destructive database mutations without verifying the caller's authorization.",
+          "fix_suggestion": "Add authentication dependency / session check before modifying resource."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-03",
+      "title": "SQL Injection in User Search Filter",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 0.53,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-INJ-SQLI-FSTRING",
+          "cwe": "CWE-89",
+          "title": "SQL Injection via Formatted String (f-string)",
+          "line": 8,
+          "severity": "HIGH",
+          "description": "Raw SQL query uses interpolated f-string, allowing user-controlled input to alter query logic.",
+          "fix_suggestion": "Pass query parameters separately to the database driver."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-04",
+      "title": "Hardcoded OpenAI API Secret Key",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 0.8,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-SEC-OPENAI_KEY",
+          "cwe": "CWE-798",
+          "title": "Hardcoded Secret / API Key (OPENAI_KEY)",
+          "line": 4,
+          "severity": "CRITICAL",
+          "snippet": "OPENAI_KEY = \"sk-proj-abc1234567890defghijklmnopqrstuvwxyz_secret_token\"",
+          "entropy": 5.06,
+          "description": "Exposed high-entropy secret detected on line 4. Leaking secrets enables unauthorized account hijacking.",
+          "fix_suggestion": "Extract the secret into an environment variable (e.g. process.env or os.environ)."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-05",
+      "title": "SQL Injection via String Concatenation in Express Route",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 0.28,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-INJ-SQLI-JS",
+          "cwe": "CWE-89",
+          "title": "SQL Injection via Concatenation / Template Literal",
+          "line": 4,
+          "severity": "HIGH",
+          "snippet": "const query = \"SELECT * FROM orders WHERE customer_id = \" + req.query.customerId;",
+          "description": "Database query constructed using unescaped request input in template literal or string addition.",
+          "fix_suggestion": "Use parameterized queries or ORM prepared statements."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-06",
+      "title": "Hardcoded AWS Access Key in File Uploader",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 1.65,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-SEC-AWS_ACCESS_KEY",
+          "cwe": "CWE-798",
+          "title": "Hardcoded Secret / API Key (AWS_ACCESS_KEY)",
+          "line": 4,
+          "severity": "CRITICAL",
+          "snippet": "AWS_ACCESS_KEY = \"AKIAIOSFODNN7EXAMPLE\"",
+          "entropy": 3.68,
+          "description": "Exposed high-entropy secret detected on line 4. Leaking secrets enables unauthorized account hijacking.",
+          "fix_suggestion": "Extract the secret into an environment variable (e.g. process.env or os.environ)."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-07",
+      "title": "Command Injection in Image Converter Utility",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 1.18,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-INJ-RCE",
+          "cwe": "CWE-78",
+          "title": "Command Injection Risk via Dynamic Shell Execution",
+          "line": 6,
+          "severity": "CRITICAL",
+          "description": "System command execution with dynamic user input leads to Remote Code Execution (RCE).",
+          "fix_suggestion": "Avoid shell=True and pass command arguments as a list."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-08",
+      "title": "Unauthenticated Billing Tier Modification",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 5.25,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-AUTH-IDOR",
+          "cwe": "CWE-285",
+          "title": "Missing Access Control on Mutating Endpoint (IDOR)",
+          "line": 4,
+          "severity": "HIGH",
+          "description": "Endpoint 'update_subscription_tier' performs destructive database mutations without verifying the caller's authorization.",
+          "fix_suggestion": "Add authentication dependency / session check before modifying resource."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-09",
+      "title": "Exposed PostgreSQL Connection URI with Password",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 2.89,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-SEC-DATABASE_URL",
+          "cwe": "CWE-798",
+          "title": "Hardcoded Secret / API Key (DATABASE_URL)",
+          "line": 4,
+          "severity": "CRITICAL",
+          "snippet": "DATABASE_URL = \"postgres://admin_user:super_secret_db_pass_2026@db.internal.cloud.com:5432/main_db\"",
+          "entropy": 4.53,
+          "description": "Exposed high-entropy secret detected on line 4. Leaking secrets enables unauthorized account hijacking.",
+          "fix_suggestion": "Extract the secret into an environment variable (e.g. process.env or os.environ)."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-10",
+      "title": "Dynamic Python Eval for User Calculation",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 0.61,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-RCE-EVAL",
+          "cwe": "CWE-95",
+          "title": "Arbitrary Code Execution via eval() / exec()",
+          "line": 4,
+          "severity": "CRITICAL",
+          "description": "Dynamic evaluation of untrusted code leads to immediate system compromise.",
+          "fix_suggestion": "Refactor logic to use safe parsers like json.loads or ast.literal_eval."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-11",
+      "title": "Cross-Site Scripting (XSS) in React Comment Viewer",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 0.26,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-XSS-UNSANITIZED",
+          "cwe": "CWE-79",
+          "title": "Cross-Site Scripting (XSS) via Unsanitized HTML",
+          "line": 4,
+          "severity": "HIGH",
+          "snippet": "return <div dangerouslySetInnerHTML={{ __html: rawCommentHtml }} />;",
+          "description": "Direct insertion of unsanitized HTML into DOM permits client-side script execution.",
+          "fix_suggestion": "Pass raw strings through DOMPurify.sanitize() before rendering."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-12",
+      "title": "SQL Injection in Password Reset Token Lookup",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 1.39,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-INJ-SQLI-FSTRING",
+          "cwe": "CWE-89",
+          "title": "SQL Injection via Formatted String (f-string)",
+          "line": 7,
+          "severity": "HIGH",
+          "description": "Raw SQL query uses interpolated f-string, allowing user-controlled input to alter query logic.",
+          "fix_suggestion": "Pass query parameters separately to the database driver."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-13",
+      "title": "Unauthenticated Resource Removal Endpoint (Express)",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 0.61,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-AUTH-UNPROTECTED-ROUTE",
+          "cwe": "CWE-306",
+          "title": "Unauthenticated API Mutation Route (Missing Auth Guard)",
+          "line": 2,
+          "severity": "HIGH",
+          "snippet": "app.delete('/api/documents/:docId', async (req, res) => {",
+          "description": "API route handles sensitive modifications without authentication middleware.",
+          "fix_suggestion": "Mount an authentication middleware handler on the route."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-14",
+      "title": "Exposed GitHub Personal Access Token",
+      "expected_vulnerable": true,
+      "detected_vulnerable": false,
+      "latency_ms": 8.68,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u274c FN (Vulnerability Missed)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-VULN-15",
+      "title": "SQL Injection in Invoice Generation Query",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 2.71,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-INJ-SQLI-FSTRING",
+          "cwe": "CWE-89",
+          "title": "SQL Injection via Formatted String (f-string)",
+          "line": 7,
+          "severity": "HIGH",
+          "description": "Raw SQL query uses interpolated f-string, allowing user-controlled input to alter query logic.",
+          "fix_suggestion": "Pass query parameters separately to the database driver."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-16",
+      "title": "Hardcoded JWT Secret Token in Middleware",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 0.7,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-SEC-GENERIC_API_TOKEN",
+          "cwe": "CWE-798",
+          "title": "Hardcoded Secret / API Key (GENERIC_API_TOKEN)",
+          "line": 2,
+          "severity": "CRITICAL",
+          "snippet": "JWT_SECRET = \"super_high_entropy_secret_signing_key_998877\"",
+          "entropy": 4.49,
+          "description": "Exposed high-entropy secret detected on line 2. Leaking secrets enables unauthorized account hijacking.",
+          "fix_suggestion": "Extract the secret into an environment variable (e.g. process.env or os.environ)."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-17",
+      "title": "Unchecked User Permission in Password Change",
+      "expected_vulnerable": true,
+      "detected_vulnerable": true,
+      "latency_ms": 1.32,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-AUTH-IDOR",
+          "cwe": "CWE-285",
+          "title": "Missing Access Control on Mutating Endpoint (IDOR)",
+          "line": 2,
+          "severity": "HIGH",
+          "description": "Endpoint 'update_user_password' performs destructive database mutations without verifying the caller's authorization.",
+          "fix_suggestion": "Add authentication dependency / session check before modifying resource."
+        }
+      ],
+      "verdict": "\u2705 TP (Vulnerability Caught)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-VULN-18",
+      "title": "SQL Injection in Product Search by Category",
+      "expected_vulnerable": true,
+      "detected_vulnerable": false,
+      "latency_ms": 0.16,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u274c FN (Vulnerability Missed)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-01",
+      "title": "Secure Parameterized User Lookup",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 5.98,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-02",
+      "title": "Secure Supabase Client via Environment Variables",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 6.65,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-03",
+      "title": "Protected Route with Authentication Dependency",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 17.85,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-04",
+      "title": "Pure Business Logic Pricing Calculator",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 3.71,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-05",
+      "title": "Secure Sanitized React HTML Display",
+      "expected_vulnerable": false,
+      "detected_vulnerable": true,
+      "latency_ms": 0.35,
+      "findings_count": 1,
+      "findings": [
+        {
+          "id": "VG-XSS-UNSANITIZED",
+          "cwe": "CWE-79",
+          "title": "Cross-Site Scripting (XSS) via Unsanitized HTML",
+          "line": 6,
+          "severity": "HIGH",
+          "snippet": "return <div dangerouslySetInnerHTML={{ __html: cleanHtml }} />;",
+          "description": "Direct insertion of unsanitized HTML into DOM permits client-side script execution.",
+          "fix_suggestion": "Pass raw strings through DOMPurify.sanitize() before rendering."
+        }
+      ],
+      "verdict": "\u26a0\ufe0f FP (False Positive)",
+      "patched": true
+    },
+    {
+      "id": "SNIP-CLEAN-06",
+      "title": "Secure Password Hashing with Bcrypt",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 4.18,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-07",
+      "title": "Secure Parameterized Express Postgres Query",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 0.5,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-08",
+      "title": "File Format Validator with Whitelist",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 2.31,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-09",
+      "title": "Safe Json Serialization Utility",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 0.68,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-10",
+      "title": "Secure Safe Subprocess with List Arguments",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 0.48,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-11",
+      "title": "Standard React User Profile Card",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 0.65,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-12",
+      "title": "Safe Email Address Regex Validator",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 0.67,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-13",
+      "title": "Secure Database Transaction Manager",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 0.64,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-14",
+      "title": "Environment Variable Loader with Fallbacks",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 1.9,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-15",
+      "title": "Secure In-Memory Token Cache",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 4.58,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-16",
+      "title": "Safe URL Path Normalizer",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 3.72,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    },
+    {
+      "id": "SNIP-CLEAN-17",
+      "title": "Authenticated Express Middleware Handler",
+      "expected_vulnerable": false,
+      "detected_vulnerable": false,
+      "latency_ms": 0.55,
+      "findings_count": 0,
+      "findings": [],
+      "verdict": "\u2705 TN (Correctly Benign)",
+      "patched": false
+    }
+  ]
+}
