@@ -16,6 +16,11 @@
     textarea:focus { outline: none; }
     .ast-tree-node { border-left: 2px solid #3b82f6; margin-left: 14px; padding-left: 10px; }
     pre { white-space: pre-wrap; word-break: break-all; }
+    /* Sleek Custom Scrollbars */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
@@ -307,8 +312,8 @@
   </main>
 
   <!-- THREAT MATRIX MODAL (SHOWCASING ALL 6 VULNERABILITIES) -->
-  <div id="threat-matrix-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="glass-card max-w-5xl w-full rounded-2xl border border-slate-800 p-6 max-h-[90vh] flex flex-col justify-between shadow-2xl">
+  <div id="threat-matrix-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="glass-card max-w-5xl w-full rounded-2xl border border-slate-800 p-6 max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col justify-between my-auto">
       <div>
         <div class="flex items-center justify-between pb-3.5 border-b border-slate-800">
           <div class="flex items-center space-x-3">
@@ -442,8 +447,8 @@
   </div>
 
   <!-- SECURITY PREVENTION GUIDE MODAL -->
-  <div id="guide-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="glass-card max-w-4xl w-full rounded-2xl border border-slate-800 p-6 max-h-[88vh] flex flex-col justify-between shadow-2xl">
+  <div id="guide-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="glass-card max-w-4xl w-full rounded-2xl border border-slate-800 p-6 max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col justify-between my-auto">
       <div>
         <div class="flex items-center justify-between pb-3.5 border-b border-slate-800">
           <div class="flex items-center space-x-3">
@@ -496,8 +501,8 @@
   </div>
 
   <!-- RESEARCH BENCHMARK MODAL (WITH BASELINE COMPARISON & FAILURE ANALYSIS) -->
-  <div id="benchmark-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="glass-card max-w-5xl w-full rounded-2xl border border-slate-800 p-6 max-h-[92vh] flex flex-col justify-between shadow-2xl">
+  <div id="benchmark-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="glass-card max-w-5xl w-full rounded-2xl border border-slate-800 p-6 max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col justify-between my-auto">
       <div>
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
           <div class="flex items-center space-x-3">
